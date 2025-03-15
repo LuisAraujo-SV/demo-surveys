@@ -1,93 +1,259 @@
-# Survey Rewards Platform - Backend
+# Survey Rewards Platform
 
-A RESTful API for a survey rewards platform that allows users to participate in surveys and earn points for their responses. Built with Node.js, Express, and PostgreSQL.
+A full-stack application that allows users to earn points by completing surveys. Built with Next.js 14 (Frontend) and Node.js/Express (Backend).
 
-## Features
+## Project Overview
 
-- User authentication (registration and login)
-- JWT-based authorization
-- Survey management and responses
-- Points system for completed surveys
-- User profile management
-- Survey response history
+This project demonstrates modern full-stack development practices, including:
 
-## Technologies
+- Type-safe development with TypeScript
+- Real-time data management with React Query
+- RESTful API design with Express
+- Database modeling with Sequelize ORM
+- Authentication with JWT
+- Clean architecture and separation of concerns
+- Responsive UI with Tailwind CSS
 
-- Node.js
-- Express
+## Backend Implementation
+
+### Technologies
+
+- Node.js & Express
 - PostgreSQL
 - Sequelize ORM
-- JWT Authentication
-- Swagger Documentation
+- JSON Web Tokens (JWT)
+- Zod for validation
+- Swagger for API documentation
 
-## Project Setup
+### Features
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL 12+
-- npm or yarn
+- JWT-based authentication
+- RESTful API endpoints
+- Database migrations and seeding
+- Input validation with Zod
+- Error handling middleware
+- Swagger API documentation
+- Unit tests with Jest
 
-### Installation and Setup
-1. Clone the repository and navigate to the backend directory:
+### Database Schema
+
+- user
+  - id (PK)
+  - name
+  - email
+  - password
+  - points
+  - category
+
+
+- survey
+  - id (PK)
+  - title
+  - description
+  - category
+  - points
+  - questions (JSONB)
+
+
+- question
+  - id (PK)
+  - survey_id (FK)
+  - text
+  - type
+  - options
+  - required
+  - created_at
+  - updated_at
+
+
+- survey_response
+  - id (PK)
+  - user_id (FK)
+  - survey_id (FK)
+  - answers (JSONB)
+  - points_earned
+  - created_at
+
+### Setup Instructions
+
+1. Install dependencies:
+   ```bash
+   cd backend
+   npm install
+   ```
+
+2. Configure environment:
+   ```bash
+   # Create .env file with the following content:
+   PORT=3001
+   NODE_ENV=development
+   CONTEXT_PATH=/survey-app
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=postgres
+   DB_USER=postgres
+   DB_PASSWORD=your_password
+   JWT_SECRET=your_secret
+   JWT_EXPIRES_IN=24h
+   CORS_ORIGIN=http://localhost:3000
+   ```
+
+3. Run migrations:
+   ```bash
+   cd db
+   node migrate.js
+   ```
+
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+## Frontend Implementation
+
+### Technologies
+
+- Next.js 14 (App Router)
+- TypeScript
+- React Query
+- Tailwind CSS
+- React Hook Form
+- Headless UI
+
+### Features
+
+- Server and Client Components
+- Optimistic Updates
+- Form Validation
+- Responsive Design
+- Real-time Cache Management
+- Protected Routes
+- Loading States
+- Error Handling
+
+### Project Structure
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── auth/          # Authentication pages
+│   │   ├── dashboard/     # Dashboard and survey pages
+│   │   └── layout.tsx     # Root layout
+│   ├── components/        # Reusable components
+│   ├── lib/
+│   │   ├── api.ts        # API service
+│   │   └── utils.ts      # Helper functions
+│   └── providers/        # Context providers
+```
+
+### Key Features Implementation
+
+1. **Authentication Flow**
+   - JWT-based auth with local storage
+   - Protected routes with middleware
+   - Auto-logout on token expiration
+
+2. **Data Management**
+   - React Query for server state
+   - Optimistic updates for better UX
+   - Cache invalidation strategies
+   - Type-safe API calls
+
+3. **Form Handling**
+   - Validation with React Hook Form
+   - Error messages
+   - Loading states
+   - File upload support
+
+4. **Cache Strategy**
+   ```typescript
+   // Example of optimistic updates
+   const submitMutation = useMutation({
+     onSuccess: async () => {
+       // Update user points immediately
+       queryClient.setQueryData(['user-profile'], {...});
+       // Remove completed survey
+       queryClient.setQueryData(['surveys'], {...});
+       // Add to history
+       queryClient.setQueryData(['survey-history'], {...});
+       // Validate with server
+       await queryClient.invalidateQueries({...});
+     },
+   });
+   ```
+
+### Setup Instructions
+
+1. Install dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. Configure environment:
+   ```bash
+   cp .env.example .env.local
+   # Add your API URL
+   ```
+
+3. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+## Best Practices
+
+### Backend
+- Use TypeScript for type safety
+- Implement proper error handling
+- Follow RESTful conventions
+- Use middleware for common operations
+- Validate all inputs
+- Use environment variables
+- Write unit tests
+- Document API endpoints
+
+### Frontend
+- Use TypeScript strictly
+- Implement proper loading states
+- Handle errors gracefully
+- Use proper cache invalidation
+- Implement optimistic updates
+- Follow atomic design principles
+- Use proper type definitions
+- Implement responsive design
+
+## Testing
+
+### Backend
 ```bash
 cd backend
+npm run test
 ```
 
-2. Install dependencies:
+### Frontend
 ```bash
-npm install
+cd frontend
+npm run test
 ```
 
-3. Create a `.env` file with the following variables:
-```env
-PORT=3001
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_NAME=postgres
-JWT_SECRET=your_secret_key
-CONTEXT_PATH=/survey-app
-```
+## Development Workflow
 
-4. Run database migrations:
-```bash
-node src/db/migrate.js
-```
-
-5. Start the development server:
-```bash
-npm run dev
-```
+1. Start backend server
+2. Start frontend development server
+3. Access the application at http://localhost:3000
 
 ## API Documentation
 
-### Available documentation
-
-Swagger documentation available when starting the server. Under this path for example
-
-    http://localhost:3001/api-docs
-
+Available at:
+```
+http://localhost:3001/api-docs
+```
 
 ## Default Admin Account
-
-After running migrations, you can log in with:
 - Email: admin@example.com
 - Password: admin123
-
-## Available Scripts
-
-- `npm run dev`: Start development server
-- `npm start`: Start production server
-- `npm run migrate`: Run database migrations
-
-## Next Steps
-
-- Frontend development (Coming soon)
-  - Will be built with Next.js
-  - Will include user interface for surveys
-  - Will implement authentication flow
-  - Will add dashboard and profile management
 
 ## License
 
