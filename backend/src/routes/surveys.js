@@ -1,8 +1,7 @@
 const express = require('express');
 const { z } = require('zod');
 const auth = require('../middleware/auth');
-const { Survey, Question, SurveyResponse } = require('../models');
-const { sequelize } = require('../config/database');
+const surveyController = require('../controllers/survey.controller');
 
 const router = express.Router();
 
@@ -26,30 +25,7 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized
  */
-router.get('/', auth, async (req, res) => {
-  try {
-    // Get user's completed surveys first
-    const completedSurveys = await SurveyResponse.findAll({
-      where: { user_id: req.user.id },
-      attributes: ['survey_id']
-    });
-
-    const completedSurveyIds = completedSurveys.map(response => response.survey_id);
-
-    // Then get available surveys
-    const surveys = await Survey.findAll({
-      order: [['created_at', 'DESC']]
-    });
-
-    // Filter out completed surveys
-    const availableSurveys = surveys.filter(survey => !completedSurveyIds.includes(survey.id));
-
-    res.json(availableSurveys);
-  } catch (error) {
-    console.error('Error fetching surveys:', error);
-    res.status(500).json({ message: 'Error retrieving surveys' });
-  }
-});
+router.get('/', auth, surveyController.getAllSurveys);
 
 /**
  * @swagger
@@ -76,22 +52,7 @@ router.get('/', auth, async (req, res) => {
  *       404:
  *         description: Survey not found
  */
-router.get('/:id', auth, async (req, res) => {
-  try {
-    const survey = await Survey.findByPk(req.params.id, {
-      include: [{
-        model: Question,
-        as: 'questions'
-      }]
-    });
-    if (!survey) {
-      return res.status(404).json({ message: 'Survey not found' });
-    }
-    res.json(survey);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.get('/:id', auth, surveyController.getSurveyById);
 
 // Survey validation schema
 const createSurveySchema = z.object({
@@ -107,18 +68,7 @@ const createSurveySchema = z.object({
 });
 
 // Create new survey (admin only)
-router.post('/', auth, async (req, res) => {
-  try {
-    const validatedData = createSurveySchema.parse(req.body);
-    const survey = await Survey.create(validatedData);
-    res.status(201).json(survey);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Invalid survey data', errors: error.errors });
-    }
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.post('/', auth, surveyController.createSurvey);
 
 // Response validation schema
 const surveyResponseSchema = z.object({
@@ -249,45 +199,7 @@ const validateSurveyResponse = async (req, res, next) => {
   next();
 };
 
-router.post('/:id/respond', auth, validateSurveyResponse, async (req, res) => {
-  try {
-    const survey = await Survey.findByPk(req.params.id);
-    if (!survey) {
-      return res.status(404).json({ message: 'Survey not found' });
-    }
-
-    // Check if user has already completed this survey
-    const existingResponse = await SurveyResponse.findOne({
-      where: {
-        user_id: req.user.id,
-        survey_id: survey.id
-      }
-    });
-
-    if (existingResponse) {
-      return res.status(400).json({ message: 'You have already completed this survey' });
-    }
-
-    // Create survey response with explicit field names
-    const response = await SurveyResponse.create({
-      user_id: req.user.id,
-      survey_id: survey.id,
-      answers: req.body.answers,
-      points_earned: survey.points
-    });
-
-    // Update user points
-    await req.user.increment('points', { by: survey.points });
-
-    res.status(201).json({
-      message: 'Response saved successfully',
-      points_earned: survey.points
-    });
-  } catch (error) {
-    console.error('Error submitting survey response:', error);
-    res.status(500).json({ message: 'Error saving the response' });
-  }
-});
+router.post('/:id/respond', auth, validateSurveyResponse, surveyController.submitResponse);
 
 // Example survey data
 const exampleSurveys = {
@@ -332,5 +244,7 @@ const exampleResponse = {
     created_at: "2024-02-20T15:30:00.000Z"
   }
 };
+
+router.get('/responses', auth, surveyController.getUserResponses);
 
 module.exports = router; 
