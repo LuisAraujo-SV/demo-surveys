@@ -5,6 +5,10 @@ const swaggerUi = require('swagger-ui-express');
 const { sequelize } = require('./config/database');
 const swaggerSpec = require('./config/swagger');
 const appConfig = require('./config/app');
+const errorHandler = require('./middleware/error');
+const ApiError = require('./utils/ApiError');
+
+// Import routes
 const authRoutes = require('./routes/auth');
 const surveyRoutes = require('./routes/surveys');
 const userRoutes = require('./routes/users');
@@ -15,7 +19,7 @@ const app = express();
 app.use(cors(appConfig.corsOptions));
 app.use(express.json());
 
-// Swagger documentation route - keep it at root level for easy access
+// Swagger documentation route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
@@ -23,13 +27,30 @@ app.use(`${appConfig.contextPath}/auth`, authRoutes);
 app.use(`${appConfig.contextPath}/surveys`, surveyRoutes);
 app.use(`${appConfig.contextPath}/users`, userRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+// Handle 404 routes
+app.use('*', (req, res, next) => {
+  next(ApiError.notFound(`Cannot find ${req.originalUrl} on this server`));
+});
+
+// Global error handler
+app.use(errorHandler);
+
+// Unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('UNHANDLED REJECTION! Shutting down...');
+  console.error('Error:', err);
+  
+  // Gracefully shutdown
+  process.exit(1);
+});
+
+// Uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION! Shutting down...');
+  console.error('Error:', err);
+  
+  // Gracefully shutdown
+  process.exit(1);
 });
 
 // Database connection and server start
@@ -45,6 +66,7 @@ async function startServer() {
     });
   } catch (error) {
     console.error('Could not connect to the database:', error);
+    process.exit(1);
   }
 }
 

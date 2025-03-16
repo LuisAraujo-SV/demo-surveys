@@ -5,114 +5,137 @@ const ApiError = require('../utils/ApiError');
 
 class UserService {
   async updateProfile(userId, updateData) {
-    const user = await User.findByPk(userId);
+    try {
+      const user = await User.findByPk(userId);
 
-    if (!user) {
-      throw new ApiError(404, 'User not found');
+      if (!user) {
+        throw ApiError.notFound('User not found');
+      }
+
+      await user.update(updateData).catch((error) => {
+        if (error.name === 'SequelizeValidationError') {
+          throw ApiError.badRequest('Invalid profile data', error.errors);
+        }
+        throw error;
+      });
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        category: user.category,
+        points: user.points
+      };
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      throw ApiError.internal('Error updating profile');
     }
-
-    await user.update(updateData);
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      category: user.category,
-      points: user.points
-    };
   }
 
   async changePassword(userId, currentPassword, newPassword) {
-    const user = await User.findByPk(userId);
+    try {
+      const user = await User.findByPk(userId);
 
-    if (!user) {
-      throw new ApiError(404, 'User not found');
+      if (!user) {
+        throw ApiError.notFound('User not found');
+      }
+
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+      if (!isPasswordValid) {
+        throw ApiError.badRequest('Current password is incorrect');
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await user.update({ password: hashedPassword });
+
+      return { message: 'Password updated successfully' };
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      throw ApiError.internal('Error changing password');
     }
-
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-
-    if (!isPasswordValid) {
-      throw new ApiError(401, 'Current password is incorrect');
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await user.update({ password: hashedPassword });
-
-    return { message: 'Password updated successfully' };
   }
 
   async getUserStats(userId) {
-    const user = await User.findByPk(userId);
+    try {
+      const user = await User.findByPk(userId);
 
-    if (!user) {
-      throw new ApiError(404, 'User not found');
+      if (!user) {
+        throw ApiError.notFound('User not found');
+      }
+
+      const completedSurveys = await SurveyResponse.count({
+        where: { user_id: userId }
+      });
+
+      const totalPoints = user.points;
+
+      const surveysByCategory = await SurveyResponse.findAll({
+        attributes: [
+          [sequelize.col('Survey.category'), 'category'],
+          [sequelize.fn('COUNT', '*'), 'count']
+        ],
+        include: [{
+          model: Survey,
+          attributes: []
+        }],
+        where: { user_id: userId },
+        group: ['Survey.category'],
+        raw: true
+      });
+
+      return {
+        completedSurveys,
+        totalPoints,
+        surveysByCategory
+      };
+    } catch (error) {
+      throw ApiError.internal('Error fetching user statistics');
     }
-
-    const completedSurveys = await SurveyResponse.count({
-      where: { user_id: userId }
-    });
-
-    const totalPoints = user.points;
-
-    const surveysByCategory = await SurveyResponse.findAll({
-      attributes: [
-        [sequelize.col('Survey.category'), 'category'],
-        [sequelize.fn('COUNT', '*'), 'count']
-      ],
-      include: [{
-        model: Survey,
-        attributes: []
-      }],
-      where: { user_id: userId },
-      group: ['Survey.category'],
-      raw: true
-    });
-
-    return {
-      completedSurveys,
-      totalPoints,
-      surveysByCategory
-    };
   }
 
   async getProfile(userId) {
-    const user = await User.findByPk(userId);
+    try {
+      const user = await User.findByPk(userId);
 
-    if (!user) {
-      throw new ApiError(404, 'User not found');
+      if (!user) {
+        throw ApiError.notFound('User not found');
+      }
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        category: user.category,
+        points: user.points
+      };
+    } catch (error) {
+      throw ApiError.internal('Error fetching user profile');
     }
-
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      category: user.category,
-      points: user.points
-    };
   }
 
   async getSurveyHistory(userId) {
-    const responses = await SurveyResponse.findAll({
-      where: { user_id: userId },
-      include: [{
-        model: Survey, as: 'survey',
-        attributes: ['id', 'title', 'category', 'points', 'description']
-      }],
-      order: [['created_at', 'DESC']], // Most recent responses first
-      attributes: ['id', 'answers', 'points_earned', 'created_at']
-    });
+    try {
+      const responses = await SurveyResponse.findAll({
+        where: { user_id: userId },
+        include: [{
+          model: Survey, as: 'survey',
+          attributes: ['id', 'title', 'category', 'points', 'description']
+        }],
+        order: [['created_at', 'DESC']],
+        attributes: ['id', 'answers', 'points_earned', 'created_at']
+      });
 
-    if (!responses) {
-      return [];
+      return responses.map(response => ({
+        id: response.id,
+        survey: response.survey,
+        answers: response.answers,
+        points_earned: response.points_earned,
+        created_at: response.createdAt
+      }));
+    } catch (error) {
+      throw ApiError.internal('Error fetching survey history');
     }
-
-    return responses.map(response => ({
-      id: response.id,
-      survey: response.survey,
-      answers: response.answers,
-      points_earned: response.points_earned,
-      created_at: response.created_at
-    }));
   }
 }
 

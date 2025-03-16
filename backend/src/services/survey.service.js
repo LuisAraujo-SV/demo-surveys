@@ -4,21 +4,28 @@ const ApiError = require('../utils/ApiError');
 
 class SurveyService {
   async createSurvey(surveyData) {
-    const result = await sequelize.transaction(async (t) => {
-      const survey = await Survey.create(surveyData, { transaction: t });
-      
-      if (surveyData.questions && surveyData.questions.length > 0) {
-        const questions = surveyData.questions.map(q => ({
-          ...q,
-          survey_id: survey.id
-        }));
-        await Question.bulkCreate(questions, { transaction: t });
-      }
-      
-      return survey;
-    });
+    try {
+      const result = await sequelize.transaction(async (t) => {
+        const survey = await Survey.create(surveyData, { transaction: t });
+        
+        if (surveyData.questions && surveyData.questions.length > 0) {
+          const questions = surveyData.questions.map(q => ({
+            ...q,
+            survey_id: survey.id
+          }));
+          await Question.bulkCreate(questions, { transaction: t });
+        }
+        
+        return survey;
+      });
 
-    return this.getSurveyById(result.id);
+      return this.getSurveyById(result.id);
+    } catch (error) {
+      if (error.name === 'SequelizeValidationError') {
+        throw ApiError.badRequest('Invalid survey data', error.errors);
+      }
+      throw ApiError.internal('Error creating survey');
+    }
   }
 
   async getSurveyById(id) {
@@ -30,38 +37,41 @@ class SurveyService {
     });
 
     if (!survey) {
-      throw new ApiError(404, 'Survey not found');
+      throw ApiError.notFound('Survey not found');
     }
 
     return survey;
   }
 
   async getAllSurveys(userId) {
-    // Get all surveys with their questions
-    const surveys = await Survey.findAll({
-      include: [
-        {
-          model: Question,
-          as: 'questions'
-        },
-        {
-          model: SurveyResponse,
-          as: 'responses',
-          where: { user_id: userId },
-          required: false // LEFT JOIN to include surveys without responses
-        }
-      ],
-      having: sequelize.literal('COUNT(responses.id) = 0'), // Update to use the alias
-      group: ['responses.id', 'Survey.id', 'questions.id'], // Group by survey and question IDs
-      order: [['created_at', 'DESC']] // Most recent surveys first
-    });
+    try {
+      const surveys = await Survey.findAll({
+        include: [
+          {
+            model: Question,
+            as: 'questions'
+          },
+          {
+            model: SurveyResponse,
+            as: 'responses',
+            where: { user_id: userId },
+            required: false
+          }
+        ],
+        having: sequelize.literal('COUNT(responses.id) = 0'),
+        group: ['responses.id', 'Survey.id', 'questions.id'],
+        order: [['created_at', 'DESC']]
+      });
 
-    return surveys;
+      return surveys;
+    } catch (error) {
+      console.log(error);
+      throw ApiError.internal('Error fetching surveys');
+    }
   }
 
   async submitSurveyResponse(surveyId, userId, answers) {
     const survey = await this.getSurveyById(surveyId);
-    console.log(survey);
     
     // Check if user has already completed this survey
     const existingResponse = await SurveyResponse.findOne({
@@ -72,7 +82,7 @@ class SurveyService {
     });
 
     if (existingResponse) {
-      throw new ApiError(400, 'You have already completed this survey');
+      throw ApiError.badRequest('You have already completed this survey');
     }
 
     // Validate that all questions are answered
@@ -81,45 +91,59 @@ class SurveyService {
     const hasAllAnswers = surveyQuestionIds.every(id => answerQuestionIds.includes(id));
 
     if (!hasAllAnswers) {
-      throw new ApiError(400, 'All questions must be answered');
+      throw ApiError.badRequest('All questions must be answered');
     }
 
-    const result = await sequelize.transaction(async (t) => {
-      // Create survey response with points_earned
-      const response = await SurveyResponse.create({
-        survey_id: surveyId,
-        user_id: userId,
-        answers: answers,
-        points_earned: survey.points
-      }, { transaction: t });
+    try {
+      const result = await sequelize.transaction(async (t) => {
+        // Create survey response
+        const response = await SurveyResponse.create({
+          survey_id: surveyId,
+          user_id: userId,
+          answers: answers,
+          points_earned: survey.points
+        }, { transaction: t });
 
-      // Award points to user
-      await User.increment('points', {
-        by: survey.points,
-        where: { id: userId },
-        transaction: t
+        // Award points to user
+        await User.increment('points', {
+          by: survey.points,
+          where: { id: userId },
+          transaction: t
+        });
+
+        return {
+          response,
+          pointsEarned: survey.pointsReward
+        };
       });
 
-      return {
-        response,
-        pointsEarned: survey.pointsReward
-      };
-    });
-
-    return result;
+      return result;
+    } catch (error) {
+      if (error.name === 'SequelizeValidationError') {
+        throw ApiError.badRequest('Invalid response data', error.errors);
+      }
+      throw ApiError.internal('Error submitting survey response');
+    }
   }
 
   async getUserSurveyResponses(userId) {
-    return SurveyResponse.findAll({
-      where: { user_id: userId },
-      include: [{
-        model: Survey,
+    try {
+      const responses = await SurveyResponse.findAll({
+        where: { user_id: userId },
         include: [{
-          model: Question,
-          as: 'questions'
-        }]
-      }]
-    });
+          model: Survey,
+          include: [{
+            model: Question,
+            as: 'questions'
+          }]
+        }],
+        order: [['createdAt', 'DESC']]
+      });
+
+      return responses;
+    } catch (error) {
+      throw ApiError.internal('Error fetching survey responses');
+    }
   }
 }
 
