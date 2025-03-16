@@ -75,8 +75,9 @@ export const authApi = {
 };
 
 export const surveyApi = {
-  getAll: async () => {
-    const response = await api.get<Survey[]>('/surveys');
+  getAll: async (category?: string) => {
+    const params = category && category !== '' ? { category } : undefined;
+    const response = await api.get<Survey[]>('/surveys', { params });
     return response.data;
   },
   getById: async (id: number) => {

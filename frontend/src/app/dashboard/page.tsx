@@ -1,5 +1,5 @@
 'use client';
-
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
 import { surveyApi } from '@/lib/api';
@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   const { data: surveys, isLoading: surveysLoading } = useQuery({
     queryKey: ['surveys'],
-    queryFn: surveyApi.getAll,
+    queryFn: () => surveyApi.getAll(),
   });
 
   if (surveysLoading) {

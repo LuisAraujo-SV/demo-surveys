@@ -1,26 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { surveyApi } from '@/lib/api';
 import Link from 'next/link';
+import CategoryFilter from './categoryFilter/page';
 
 export default function SurveysPage() {
+  const [category, setCategory] = useState<string | undefined>(undefined);
+
+  // Fetch surveys with React Query
   const { data: surveys, isLoading } = useQuery({
-    queryKey: ['surveys'],
-    queryFn: surveyApi.getAll,
+    queryKey: ['surveys', category],
+    queryFn: () => surveyApi.getAll(category)
   });
 
-  if (isLoading) {
-    return (
-      <div className="animate-pulse">
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div key={`skeleton-${index}`} className="h-24 bg-gray-200 rounded-lg"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const handleCategoryChange = (value: string) => {
+    setCategory(value === 'All' ? undefined : value); // Set category or undefined for all
+  };
 
   return (
     <div>
@@ -33,6 +30,8 @@ export default function SurveysPage() {
             A list of all available surveys you can take to earn points.
           </p>
         </div>
+        {/* Category Filter */}
+        <CategoryFilter onChange={handleCategoryChange} />
       </div>
       <div className="mt-8 flow-root">
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -108,4 +107,4 @@ export default function SurveysPage() {
       </div>
     </div>
   );
-} 
+}
