@@ -7,6 +7,7 @@ const swaggerSpec = require('./config/swagger');
 const appConfig = require('./config/app');
 const errorHandler = require('./middleware/error');
 const ApiError = require('./utils/ApiError');
+const gracefulShutdown = require('./utils/gracefulShutdown');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -35,22 +36,32 @@ app.use('*', (req, res, next) => {
 // Global error handler
 app.use(errorHandler);
 
-// Unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('UNHANDLED REJECTION! Shutting down...');
-  console.error('Error:', err);
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  console.error('UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(error);
+  // Log to error monitoring service (e.g., Sentry, NewRelic, etc.)
   
-  // Gracefully shutdown
-  process.exit(1);
+  // In development, crash the app to prevent undefined behavior
+  if (process.env.NODE_ENV === 'development') {
+    process.exit(1);
+  }
 });
 
-// Uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION! Shutting down...');
-  console.error('Error:', err);
+process.on('unhandledRejection', (error) => {
+  console.error('UNHANDLED REJECTION! Shutting down...');
+  console.error(error);
+  // Log to error monitoring service
   
-  // Gracefully shutdown
-  process.exit(1);
+  // In development, crash the app to prevent undefined behavior
+  if (process.env.NODE_ENV === 'development') {
+    process.exit(1);
+  }
+});
+
+// Graceful shutdown signals
+['SIGTERM', 'SIGINT', 'SIGUSR2'].forEach((signal) => {
+  process.on(signal, () => gracefulShutdown.shutdown(signal));
 });
 
 // Database connection and server start
@@ -59,11 +70,21 @@ async function startServer() {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
     
-    app.listen(appConfig.port, () => {
+    const server = app.listen(appConfig.port, () => {
       console.log(`Server running on port ${appConfig.port}`);
       console.log(`API Documentation available at http://localhost:${appConfig.port}/api-docs`);
       console.log(`API Base URL: http://localhost:${appConfig.port}${appConfig.contextPath}`);
     });
+
+    // Initialize graceful shutdown with server instance
+    gracefulShutdown.init(server);
+
+    // Handle server-specific errors
+    server.on('error', (error) => {
+      console.error('Server error:', error);
+      // Log to error monitoring service
+    });
+
   } catch (error) {
     console.error('Could not connect to the database:', error);
     process.exit(1);

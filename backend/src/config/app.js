@@ -1,7 +1,7 @@
 const config = {
   development: {
     port: process.env.PORT || 3001,
-    contextPath: process.env.CONTEXT_PATH || '/api/v1',
+    contextPath: process.env.CONTEXT_PATH || '/survey-app',
     corsOptions: {
       origin: process.env.FRONTEND_URL || 'http://localhost:3000',
       credentials: true
@@ -11,9 +11,9 @@ const config = {
   },
   test: {
     port: process.env.PORT || 3002,
-    contextPath: process.env.CONTEXT_PATH || '/api/v1',
+    contextPath: process.env.CONTEXT_PATH || '/survey-app',
     corsOptions: {
-      origin: 'http://localhost:3000',
+      origin: process.env.FRONTEND_URL,
       credentials: true
     },
     jwtSecret: 'test-secret-key',
@@ -21,7 +21,7 @@ const config = {
   },
   production: {
     port: process.env.PORT,
-    contextPath: process.env.CONTEXT_PATH || '/api/v1',
+    contextPath: process.env.CONTEXT_PATH || '/survey-app',
     corsOptions: {
       origin: process.env.FRONTEND_URL,
       credentials: true
