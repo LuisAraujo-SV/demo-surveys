@@ -1,4 +1,3 @@
-const { sequelize } = require('../db/config');
 const User = require('./User');
 const Survey = require('./Survey');
 const Question = require('./Question');

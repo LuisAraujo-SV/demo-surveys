@@ -2,7 +2,7 @@ const express = require('express');
 const { z } = require('zod');
 const auth = require('../middleware/auth');
 const { Survey, Question, SurveyResponse } = require('../models');
-const { sequelize } = require('../db/config');
+const { sequelize } = require('../config/database');
 
 const router = express.Router();
 

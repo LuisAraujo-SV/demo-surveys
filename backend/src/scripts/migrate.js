@@ -1,6 +1,4 @@
-require('dotenv').config();
-const bcrypt = require('bcryptjs');
-const { sequelize, initializeSchema } = require('./config');
+const { sequelize, initializeSchema } = require('../config/database');
 const { User, Survey, Question } = require('../models');
 
 async function migrate() {

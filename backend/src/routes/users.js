@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const User = require('../models/User');
 const SurveyResponse = require('../models/SurveyResponse');
 const Survey = require('../models/Survey');
-const { sequelize } = require('sequelize');
+const { sequelize } = require('../config/database');
 const { fn } = require('sequelize');
 
 const router = express.Router();
