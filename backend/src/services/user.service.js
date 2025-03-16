@@ -120,18 +120,17 @@ class UserService {
         where: { user_id: userId },
         include: [{
           model: Survey, as: 'survey',
-          attributes: ['id', 'title', 'category', 'points', 'description']
+          attributes: ['id', 'title', 'category', 'points']
         }],
         order: [['created_at', 'DESC']],
-        attributes: ['id', 'answers', 'points_earned', 'created_at']
+        attributes: ['id', 'points_earned', 'created_at']
       });
 
       return responses.map(response => ({
         id: response.id,
         survey: response.survey,
-        answers: response.answers,
         points_earned: response.points_earned,
-        created_at: response.createdAt
+        created_at: response.created_at
       }));
     } catch (error) {
       throw ApiError.internal('Error fetching survey history');

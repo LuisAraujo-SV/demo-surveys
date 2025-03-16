@@ -54,29 +54,8 @@ router.get('/', auth, surveyController.getAllSurveys);
  */
 router.get('/:id', auth, surveyController.getSurveyById);
 
-// Survey validation schema
-const createSurveySchema = z.object({
-  title: z.string().min(3),
-  description: z.string().min(10),
-  category: z.enum(['Technology', 'Sports', 'Fashion']),
-  questions: z.array(z.object({
-    text: z.string(),
-    type: z.enum(['multiple', 'single', 'text']),
-    options: z.array(z.string())
-  })).min(1),
-  pointsReward: z.number().int().positive().default(10)
-});
-
 // Create new survey (admin only)
 router.post('/', auth, surveyController.createSurvey);
-
-// Response validation schema
-const surveyResponseSchema = z.object({
-  answers: z.array(z.object({
-    question_id: z.number(),
-    answer: z.union([z.string(), z.array(z.string())])
-  }))
-});
 
 /**
  * @swagger
@@ -200,50 +179,6 @@ const validateSurveyResponse = async (req, res, next) => {
 };
 
 router.post('/:id/respond', auth, validateSurveyResponse, surveyController.submitResponse);
-
-// Example survey data
-const exampleSurveys = {
-  title: "Technology and Mobile Devices",
-  description: "Survey about smartphone and tablet usage",
-  category: "Technology",
-  points: 100,
-  questions: [
-    {
-      text: "What smartphone brand do you currently use?",
-      type: "single_choice",
-      options: ["Apple", "Samsung", "Xiaomi", "Other"],
-      required: true
-    },
-    {
-      text: "What features do you consider most important in a smartphone?",
-      type: "multiple_choice",
-      options: ["Camera", "Battery", "Performance", "Price"],
-      required: true
-    }
-  ]
-};
-
-// Example response format
-const exampleResponse = {
-  message: "Response saved successfully",
-  points_earned: 100,
-  survey_response: {
-    id: 1,
-    survey_id: 1,
-    answers: [
-      {
-        question_id: 1,
-        answer: "Samsung"
-      },
-      {
-        question_id: 2,
-        answer: ["Camera", "Battery"]
-      }
-    ],
-    points_earned: 100,
-    created_at: "2024-02-20T15:30:00.000Z"
-  }
-};
 
 router.get('/responses', auth, surveyController.getUserResponses);
 

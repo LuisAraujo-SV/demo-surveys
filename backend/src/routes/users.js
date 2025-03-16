@@ -48,17 +48,16 @@ router.patch('/profile', auth, userController.updateProfile);
  *                     type: integer
  *                   survey:
  *                     $ref: '#/components/schemas/Survey'
- *                   answers:
- *                     type: object
  *                   points_earned:
  *                     type: integer
  *                   created_at:
  *                     type: string
  *                     format: date-time
+ *       401:
+ *         description: Unauthorized
  */
 router.get('/surveys/history', auth, userController.getSurveyHistory);
 
-// Obtener resumen de puntos
 router.get('/points/summary', auth, userController.getUserStats);
 
 router.post('/change-password', auth, userController.changePassword);

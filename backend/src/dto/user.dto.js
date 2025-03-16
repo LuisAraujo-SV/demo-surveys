@@ -1,9 +1,9 @@
 const { z } = require('zod');
-
+const { CategoryEnum } = require('../config/category');
 // Update Profile DTO
 const updateProfileDto = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters long').optional(),
-  category: z.enum(['Technology', 'Healthcare', 'Education', 'Finance', 'Entertainment', 'Other']).optional()
+  category: CategoryEnum.optional()
 });
 
 // Change Password DTO

@@ -1,4 +1,5 @@
 const swaggerJsdoc = require('swagger-jsdoc');
+const { CategoryEnum } = require('../config/category');
 require('dotenv').config();
 
 const contextPath = process.env.CONTEXT_PATH || '/api/v1';
@@ -45,7 +46,7 @@ const options = {
             description: { type: 'string' },
             category: { 
               type: 'string',
-              enum: ['Technology', 'Sports', 'Fashion', 'Entertainment']
+              enum: CategoryEnum
             },
             points: { type: 'integer' },
             questions: {

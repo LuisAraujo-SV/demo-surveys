@@ -1,10 +1,10 @@
 const { z } = require('zod');
-
+const { CategoryEnum } = require('../config/category');
 // Create Survey DTO
 const createSurveyDto = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long'),
   description: z.string().min(10, 'Description must be at least 10 characters long'),
-  category: z.enum(['Technology', 'Sports', 'Fashion']),
+  category: CategoryEnum,
   questions: z.array(
     z.object({
       text: z.string().min(1, 'Question text is required'),

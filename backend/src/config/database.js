@@ -10,7 +10,7 @@ const config = {
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'postgres',
-  schema: 'surveys_schema',
+  schema: process.env.DB_SCHEMA || 'surveys_schema',
   define: {
     timestamps: true,
     underscored: true,
