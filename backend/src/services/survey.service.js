@@ -43,7 +43,7 @@ class SurveyService {
     return survey;
   }
 
-  async getAllSurveys(userId) {
+  async getAllSurveys(userId, category) {
     try {
       const surveys = await Survey.findAll({
         include: [
@@ -58,6 +58,7 @@ class SurveyService {
             required: false
           }
         ],
+        where: category ? { category } : {},
         having: sequelize.literal('COUNT(responses.id) = 0'),
         group: ['responses.id', 'Survey.id', 'questions.id'],
         order: [['created_at', 'DESC']]

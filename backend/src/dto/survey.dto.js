@@ -28,11 +28,17 @@ const surveyResponseDto = z.object({
   ).min(1, 'At least one answer is required')
 });
 
+// query Survey DTO
+const querySurveyDto = z.object({
+  category: CategoryEnum.optional()
+});
+
 // Update Survey DTO
 const updateSurveyDto = createSurveyDto.partial();
 
 module.exports = {
   createSurveyDto,
   surveyResponseDto,
+  querySurveyDto,
   updateSurveyDto
 }; 

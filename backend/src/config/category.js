@@ -7,6 +7,8 @@ const CategoryEnum = z.enum([
   'Education',
   'Finance',
   'Entertainment',
+  'Sports',
+  'Fashion',
   'Other',
 ]);
 
