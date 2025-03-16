@@ -1,5 +1,6 @@
 const { sequelize, initializeSchema } = require('../config/database');
 const { User, Survey, Question } = require('../models');
+const bcrypt = require('bcryptjs');
 
 async function migrate() {
   try {
@@ -15,11 +16,12 @@ async function migrate() {
     await sequelize.sync({ force: true });
     console.log('Database tables created successfully.');
 
+    const hashedPassword = await bcrypt.hash('admin123', 10);
 
     const adminUser = await User.create({
       name: 'Admin User',
       email: 'admin@example.com',
-      password: 'admin123',
+      password: hashedPassword,
       role: 'admin',
       category: 'Technology',
       points: 0

@@ -1,11 +1,6 @@
 const express = require('express');
-const { z } = require('zod');
 const auth = require('../middleware/auth');
-const User = require('../models/User');
-const SurveyResponse = require('../models/SurveyResponse');
-const Survey = require('../models/Survey');
-const { sequelize } = require('../config/database');
-const { fn } = require('sequelize');
+const userController = require('../controllers/user.controller');
 
 const router = express.Router();
 
@@ -27,45 +22,9 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized
  */
-router.get('/profile', auth, async (req, res) => {
-  try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'name', 'email', 'category', 'points']
-    });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.get('/profile', auth, userController.getProfile);
 
-// Update user profile
-const updateProfileSchema = z.object({
-  name: z.string().min(2).optional(),
-  category: z.enum(['Technology', 'Sports', 'Fashion']).optional()
-});
-
-router.patch('/profile', auth, async (req, res) => {
-  try {
-    const validatedData = updateProfileSchema.parse(req.body);
-    await req.user.update(validatedData);
-    
-    res.json({
-      message: 'Profile updated successfully',
-      user: {
-        id: req.user.id,
-        name: req.user.name,
-        email: req.user.email,
-        category: req.user.category,
-        points: req.user.points
-      }
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Invalid data', errors: error.errors });
-    }
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.patch('/profile', auth, userController.updateProfile);
 
 /**
  * @swagger
@@ -97,53 +56,11 @@ router.patch('/profile', auth, async (req, res) => {
  *                     type: string
  *                     format: date-time
  */
-router.get('/surveys/history', auth, async (req, res) => {
-  try {
-    const responses = await SurveyResponse.findAll({
-      where: { user_id: req.user.id },
-      include: [{
-        model: Survey, as: 'survey',
-        attributes: ['title', 'category', 'points']
-      }],
-      order: [['created_at', 'DESC']]
-    });
-
-    res.json(responses);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.get('/surveys/history', auth, userController.getSurveyHistory);
 
 // Obtener resumen de puntos
-router.get('/points/summary', auth, async (req, res) => {
-  try {
-    const totalPoints = req.user.points;
-    const surveyCount = await SurveyResponse.count({
-      where: { userId: req.user.id }
-    });
+router.get('/points/summary', auth, userController.getUserStats);
 
-    const pointsByCategory = await SurveyResponse.findAll({
-      attributes: [
-        [sequelize.col('Survey.category'), 'category'],
-        [sequelize.fn('SUM', sequelize.col('pointsEarned')), 'total']
-      ],
-      include: [{
-        model: Survey,
-        attributes: []
-      }],
-      where: { userId: req.user.id },
-      group: ['Survey.category']
-    });
-
-    res.json({
-      totalPoints,
-      surveyCount,
-      pointsByCategory
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+router.post('/change-password', auth, userController.changePassword);
 
 module.exports = router; 
