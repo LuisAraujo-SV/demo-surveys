@@ -27,7 +27,7 @@ app.use(`${contextPath}/users`, userRoutes);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
-    message: 'Algo salió mal!',
+    message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
@@ -36,7 +36,7 @@ app.use((err, req, res, next) => {
 async function startServer() {
   try {
     await sequelize.authenticate();
-    console.log('Conexión a la base de datos establecida correctamente.');
+    console.log('Database connection established successfully.');
     
     const PORT = process.env.PORT || 3001;
     app.listen(PORT, () => {
@@ -45,7 +45,7 @@ async function startServer() {
       console.log(`API Base URL: http://localhost:${PORT}${contextPath}`);
     });
   } catch (error) {
-    console.error('No se pudo conectar a la base de datos:', error);
+    console.error('Could not connect to the database:', error);
   }
 }
 

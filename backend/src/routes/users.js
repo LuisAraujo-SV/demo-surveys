@@ -34,14 +34,14 @@ router.get('/profile', auth, async (req, res) => {
     });
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Error en el servidor' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Actualizar perfil del usuario
+// Update user profile
 const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
-  category: z.enum(['Tecnología', 'Deportes', 'Moda']).optional()
+  category: z.enum(['Technology', 'Sports', 'Fashion']).optional()
 });
 
 router.patch('/profile', auth, async (req, res) => {
@@ -50,7 +50,7 @@ router.patch('/profile', auth, async (req, res) => {
     await req.user.update(validatedData);
     
     res.json({
-      message: 'Perfil actualizado correctamente',
+      message: 'Profile updated successfully',
       user: {
         id: req.user.id,
         name: req.user.name,
@@ -61,9 +61,9 @@ router.patch('/profile', auth, async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Datos inválidos', errors: error.errors });
+      return res.status(400).json({ message: 'Invalid data', errors: error.errors });
     }
-    res.status(500).json({ message: 'Error en el servidor' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -111,7 +111,7 @@ router.get('/surveys/history', auth, async (req, res) => {
     res.json(responses);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Error en el servidor' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -142,7 +142,7 @@ router.get('/points/summary', auth, async (req, res) => {
       pointsByCategory
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error en el servidor' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

@@ -89,11 +89,11 @@ router.get('/:id', auth, async (req, res) => {
     }
     res.json(survey);
   } catch (error) {
-    res.status(500).json({ message: 'Error en el servidor' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Esquema de validación para crear encuesta
+// Survey validation schema
 const createSurveySchema = z.object({
   title: z.string().min(3),
   description: z.string().min(10),
@@ -106,7 +106,7 @@ const createSurveySchema = z.object({
   pointsReward: z.number().int().positive().default(10)
 });
 
-// Crear nueva encuesta (solo admin)
+// Create new survey (admin only)
 router.post('/', auth, async (req, res) => {
   try {
     const validatedData = createSurveySchema.parse(req.body);
@@ -114,13 +114,13 @@ router.post('/', auth, async (req, res) => {
     res.status(201).json(survey);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Datos de encuesta inválidos', errors: error.errors });
+      return res.status(400).json({ message: 'Invalid survey data', errors: error.errors });
     }
-    res.status(500).json({ message: 'Error en el servidor' });
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Esquema de validación para respuestas
+// Response validation schema
 const surveyResponseSchema = z.object({
   answers: z.array(z.object({
     question_id: z.number(),
@@ -193,7 +193,7 @@ const surveyResponseSchema = z.object({
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Respuesta guardada correctamente"
+ *                   example: "Response saved successfully"
  *                 points_earned:
  *                   type: integer
  *                   example: 100
@@ -285,7 +285,7 @@ router.post('/:id/respond', auth, validateSurveyResponse, async (req, res) => {
     });
   } catch (error) {
     console.error('Error submitting survey response:', error);
-    res.status(500).json({ message: 'Error al guardar la respuesta' });
+    res.status(500).json({ message: 'Error saving the response' });
   }
 });
 
