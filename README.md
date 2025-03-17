@@ -14,9 +14,9 @@ This project demonstrates modern full-stack development practices, including:
 - Clean architecture and separation of concerns
 - Responsive UI with Tailwind CSS
 
-## Backend Implementation
+## Technologies
 
-### Technologies
+### Backend
 
 - Node.js & Express
 - PostgreSQL
@@ -25,66 +25,28 @@ This project demonstrates modern full-stack development practices, including:
 - Zod for validation
 - Swagger for API documentation
 
-### Features
+### Frontend
 
-- JWT-based authentication
-- RESTful API endpoints
-- Database migrations and seeding
-- Input validation with Zod
-- Error handling middleware
-- Swagger API documentation
-- Unit tests with Jest
+- Next.js 14 (App Router)
+- TypeScript
+- React Query
+- Tailwind CSS
+- React Hook Form
+- Headless UI
 
-### Database Schema
+## Setup Instructions
 
-- user
-  - id (PK)
-  - name
-  - email
-  - password
-  - points
-  - category
+### Backend
 
-
-- survey
-  - id (PK)
-  - title
-  - description
-  - category
-  - points
-  - questions (JSONB)
-
-
-- question
-  - id (PK)
-  - survey_id (FK)
-  - text
-  - type
-  - options
-  - required
-  - created_at
-  - updated_at
-
-
-- survey_response
-  - id (PK)
-  - user_id (FK)
-  - survey_id (FK)
-  - answers (JSONB)
-  - points_earned
-  - created_at
-
-### Setup Instructions
-
-1. Install dependencies:
+1. **Install dependencies:**
    ```bash
    cd backend
    npm install
    ```
 
-2. Configure environment:
-   ```bash
-   # Create .env file with the following content:
+2. **Configure environment:**
+   Create a `.env` file with the following content:
+   ```env
    PORT=3001
    NODE_ENV=development
    CONTEXT_PATH=/survey-app
@@ -98,40 +60,57 @@ This project demonstrates modern full-stack development practices, including:
    CORS_ORIGIN=http://localhost:3000
    ```
 
-3. Run migrations:
+3. **Run migrations:**
    ```bash
-   cd db
-   node migrate.js
+   npm run migrate
    ```
 
-4. Start development server:
+4. **Start development server:**
    ```bash
    npm run dev
    ```
 
-## Frontend Implementation
+### Frontend
 
-### Technologies
+1. **Install dependencies:**
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-- Next.js 14 (App Router)
-- TypeScript
-- React Query
-- Tailwind CSS
-- React Hook Form
-- Headless UI
+2. **Configure environment:**
+   Create a `.env.local` file and add your API URL:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:3001/survey-app
+   ```
 
-### Features
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
 
-- Server and Client Components
-- Optimistic Updates
-- Form Validation
-- Responsive Design
-- Real-time Cache Management
-- Protected Routes
-- Loading States
-- Error Handling
+## Project Structure
 
-### Project Structure
+### Backend
+
+```
+backend/
+├── src/
+│   ├── config/            # Configuration files
+│   ├── controllers/       # Route controllers
+│   ├── dto/               # Data Transfer Objects (DTOs)
+│   ├── middleware/        # Custom middlewares
+│   ├── models/            # Database models
+│   ├── routes/            # API routes
+│   ├── scripts/           # migration script
+│   ├── services/          # Business logic
+│   ├── utils/             # Utility functions
+│   └── index.js           # Server entry point
+├── .env                   # Environment variables
+└── package.json           # Project metadata and scripts
+```
+
+### Frontend
 
 ```
 frontend/
@@ -142,12 +121,15 @@ frontend/
 │   │   └── layout.tsx     # Root layout
 │   ├── components/        # Reusable components
 │   ├── lib/
-│   │   ├── api.ts        # API service
-│   │   └── utils.ts      # Helper functions
-│   └── providers/        # Context providers
+│   │   ├── api.ts         # API service
+│   │   └── utils.ts       # Helper functions
+│   ├── providers/         # Context providers
+│   └── middleware/        # middleware to validate token cookie
+├── .env.local             # Environment variables
+└── package.json           # Project metadata and scripts
 ```
 
-### Key Features Implementation
+## Key Features Implementation
 
 1. **Authentication Flow**
    - JWT-based auth with local storage
@@ -183,25 +165,6 @@ frontend/
    });
    ```
 
-### Setup Instructions
-
-1. Install dependencies:
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-2. Configure environment:
-   ```bash
-   cp .env.example .env.local
-   # Add your API URL
-   ```
-
-3. Start development server:
-   ```bash
-   npm run dev
-   ```
-
 ## Best Practices
 
 ### Backend
@@ -223,20 +186,6 @@ frontend/
 - Follow atomic design principles
 - Use proper type definitions
 - Implement responsive design
-
-## Testing
-
-### Backend
-```bash
-cd backend
-npm run test
-```
-
-### Frontend
-```bash
-cd frontend
-npm run test
-```
 
 ## Development Workflow
 
