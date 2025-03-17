@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-
-// Category options
-const categories = [
-  'All', 'Technology', 'Healthcare', 'Education', 
-  'Finance', 'Entertainment', 'Sports', 'Fashion', 'Other'
-];
+import { categories } from '@/lib/utils';
 
 interface CategoryFilterProps {
   onChange: (value: string) => void;
@@ -36,6 +31,7 @@ const CategoryFilter = ({ onChange }: CategoryFilterProps) => {
           'dark:bg-gray-800 dark:text-white dark:border-gray-600'
         )}
       >
+        <option value="All">All</option>
         {categories.map((category) => (
           <option key={category} value={category}>
             {category}

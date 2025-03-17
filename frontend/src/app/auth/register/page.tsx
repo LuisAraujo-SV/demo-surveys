@@ -1,10 +1,10 @@
 'use client';
 
 import { useAuth } from '@/providers/AuthProvider';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { categories } from '@/lib/utils';
 
 interface RegisterForm {
   name: string;
@@ -13,18 +13,8 @@ interface RegisterForm {
   category: string;
 }
 
-const categories = [
-  'Technology',
-  'Healthcare',
-  'Education',
-  'Finance',
-  'Entertainment',
-  'Other',
-];
-
 export default function RegisterPage() {
   const { register: registerUser, error } = useAuth();
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -156,7 +146,7 @@ export default function RegisterPage() {
                 <option value="" disabled>
                   Select your interest category
                 </option>
-                {categories.map((category) => (
+                {categories.map((category: string) => (
                   <option key={category} value={category}>
                     {category}
                   </option>

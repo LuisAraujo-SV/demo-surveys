@@ -16,3 +16,14 @@ export function formatDate(date: string) {
 export function formatPoints(points: number) {
   return `${points} ${points === 1 ? 'point' : 'points'}`;
 } 
+
+export const categories = [
+  'Technology',
+  'Healthcare',
+  'Education',
+  'Finance',
+  'Entertainment',
+  'Sports',
+  'Fashion',
+  'Other',
+];

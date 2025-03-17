@@ -10,7 +10,7 @@ export default function SurveysPage() {
   const [category, setCategory] = useState<string | undefined>(undefined);
 
   // Fetch surveys with React Query
-  const { data: surveys, isLoading } = useQuery({
+  const { data: surveys } = useQuery({
     queryKey: ['surveys', category],
     queryFn: () => surveyApi.getAll(category)
   });
