@@ -10,7 +10,7 @@ interface LoginForm {
   password: string;
 }
 
-export default function LoginPage() {
+const LoginPage = () => {
   const { login, error } = useAuth();
   const {
     register,
@@ -126,4 +126,6 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+};
+
+export default LoginPage;
