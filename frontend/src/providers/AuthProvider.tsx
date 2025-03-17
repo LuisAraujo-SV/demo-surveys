@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi, type User } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
+import Cookies from 'js-cookie';
 
 interface AuthContextType {
   user: User | null;
@@ -26,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = Cookies.get('token');
       if (!token) {
         setUser(null);
         setLoading(false);
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
+      Cookies.remove('token');
       setUser(null);
     } finally {
       setLoading(false);
@@ -52,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const { token, user } = await authApi.login({ email, password });
-      localStorage.setItem('token', token);
+      Cookies.set('token', token);
       setUser(user);
       router.push('/dashboard');
     } catch (error) {
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const { token, user } = await authApi.register({ name, email, password, category });
-      localStorage.setItem('token', token);
+      Cookies.set('token', token);
       setUser(user);
       router.push('/dashboard');
     } catch (error) {
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    Cookies.remove('token');
     setUser(null);
     queryClient.clear();
     router.push('/auth/login');
@@ -104,4 +105,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}

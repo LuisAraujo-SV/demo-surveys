@@ -1,7 +1,6 @@
 'use client';
 
 import { useAuth } from '@/providers/AuthProvider';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -13,7 +12,6 @@ interface LoginForm {
 
 export default function LoginPage() {
   const { login, error } = useAuth();
-  const router = useRouter();
   const {
     register,
     handleSubmit,

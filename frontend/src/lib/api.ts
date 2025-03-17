@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -7,13 +8,28 @@ const api = axios.create({
   },
 });
 
+// Add token to request headers if available
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    const token = Cookies.get('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
+
+// 401 and 403 errors: remove token from storage and redirect to login page
+api.interceptors.response.use(
+  (response) => response,
+  (error) => { 
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      Cookies.remove('token'); // Remove token from cookies
+      window.location.href = '/auth/login'; // Redirect to login page
+    }
+    return Promise.reject(error);
+  }
+);
 
 export interface LoginCredentials {
   email: string;
@@ -93,10 +109,10 @@ export const surveyApi = {
 export const userApi = {
   getHistory: async () => {
     const response = await api.get<Array<{
-      id: any; survey: Survey; points_earned: number; created_at: string 
-}>>('/users/surveys/history');
+      id: number; survey: Survey; points_earned: number; created_at: string 
+    }>>('/users/surveys/history');
     return response.data;
   },
 };
 
-export default api; 
+export default api;
