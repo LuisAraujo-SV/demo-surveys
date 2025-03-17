@@ -1,13 +1,12 @@
 const surveyService = require('../services/survey.service');
-const { createSurveyDto, surveyResponseDto, querySurveyDto } = require('../dto/survey.dto');
+const { createSurveyDto, surveyResponseDto,  } = require('../dto/survey.dto');
 const ApiError = require('../utils/ApiError');
 const { catchAsync } = require('../utils/catchAsync');
 
 class SurveyController {
   
   getAllSurveys = catchAsync(async (req, res) => {
-    const validatedData = querySurveyDto.parse(req.query);
-    const surveys = await surveyService.getAllSurveys(req.user.id, validatedData.category);
+    const surveys = await surveyService.getAllSurveys(req.user);
     res.json(surveys);
   });
 
